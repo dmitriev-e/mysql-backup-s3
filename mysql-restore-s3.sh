@@ -55,7 +55,7 @@ list_backups() {
     echo "Available backups in s3://$S3_BUCKET/$SRV_FOLDER/$S3_PREFIX/$DB_NAME/:"
     echo "================================================="
     
-    s3cmd ls "s3://$S3_BUCKET/$SRV_FOLDER/$S3_PREFIX/" | grep -E '\.(sql|sql\.gz|sql\.gz\.enc)$' | while read -r line; do
+    s3cmd ls "s3://$S3_BUCKET/$SRV_FOLDER/$S3_PREFIX/$DB_NAME/" | grep -E '\.(sql|sql\.gz|sql\.gz\.enc)$' | while read -r line; do
         # Parse s3cmd ls output (format: date time size file)
         date_part=$(echo "$line" | awk '{print $1, $2}')
         size_part=$(echo "$line" | awk '{print $3}')
