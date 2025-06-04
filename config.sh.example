@@ -1,0 +1,112 @@
+#!/bin/bash
+# =================================================================
+# EXAMPLE configuration file for MySQL backup/restore scripts
+# =================================================================
+# 
+# SETUP INSTRUCTIONS:
+# 1. Copy this file to config.sh:
+#    cp config.sh.example config.sh
+# 
+# 2. Edit the parameters in config.sh according to your environment
+# 
+# 3. Make sure config.sh has proper permissions:
+#    chmod 600 config.sh  # only owner can read/write
+# 
+# WARNING: DO NOT ADD config.sh to version control!
+# config.sh contains passwords and should be added to .gitignore
+# =================================================================
+
+# === MySQL Database Configuration ===
+# Database name for backup/restore operations
+DB_NAME="your_database_name"
+
+# MySQL user for backup operations
+# It's recommended to create a separate user with minimal privileges
+DB_USER="backup_user"
+DB_PASSWORD="your_backup_user_password"
+
+# MySQL user for restore operations (usually root or admin)
+# This user should have rights to create/drop databases
+DB_RESTORE_USER="root"
+
+# MySQL connection parameters
+DB_HOST="localhost"
+DB_PORT="3306"
+
+# === MySQL Administration ===
+# MySQL admin user for administrative operations (creating users, grants, etc.)
+# This is typically 'root' but could be another admin user
+DB_ADMIN_USER="root"
+# Note: Admin password is not stored here for security reasons
+# Administrative scripts will prompt for this password when needed
+
+# === S3 Configuration ===
+# Main S3 bucket for storing backups
+# Example: "my-company-backups" (without s3://)
+S3_BUCKET="your-backup-bucket"
+
+# Prefix for organizing files in S3 (for backup script)
+# This is usually the server name or environment
+SRV_FOLDER="production-server-01"
+
+# Prefix for organizing files in S3 (for restore script)
+# Full path to backup directory without filename
+S3_PREFIX="mysql-backups/production"
+
+# S3 storage class 
+# Options: STANDARD, STANDARD_IA, ONEZONE_IA, REDUCED_REDUNDANCY, GLACIER, DEEP_ARCHIVE
+STORAGE_CLASS="STANDARD_IA"
+
+# === Local Configuration ===
+# Temporary directory for file processing
+# Make sure there's enough disk space
+TEMP_DIR="/tmp/mysql_restore"
+
+# Log file for restore operations
+LOG_FILE="/var/log/mysql_restore.log"
+
+# === Security Configuration ===
+# Encryption key for encrypted backups 
+# Leave empty if encryption is not used
+ENCRYPTION_KEY=""
+
+# === Backup Configuration ===
+# Additional options for mysqldump
+# Default includes safe options for InnoDB
+MYSQLDUMP_OPTIONS="--single-transaction --routines --triggers"
+
+# MySQL privileges required for backup user
+# These privileges will be granted when creating the backup user
+BACKUP_USER_PRIVILEGES="SELECT,LOCK TABLES,SHOW VIEW,EVENT,TRIGGER,PROCESS"
+
+# === Validation ===
+# Configuration validation function
+validate_config() {
+    local errors=()
+    
+    # Check required parameters
+    [ -z "$DB_NAME" ] && errors+=("DB_NAME cannot be empty")
+    [ -z "$DB_USER" ] && errors+=("DB_USER cannot be empty")
+    [ -z "$DB_PASSWORD" ] && errors+=("DB_PASSWORD cannot be empty")
+    [ -z "$S3_BUCKET" ] && errors+=("S3_BUCKET cannot be empty")
+    [ -z "$DB_ADMIN_USER" ] && errors+=("DB_ADMIN_USER cannot be empty")
+    
+    # Check that values were changed from examples
+    [ "$DB_NAME" = "your_database_name" ] && errors+=("Change DB_NAME from example to real value")
+    [ "$S3_BUCKET" = "your-backup-bucket" ] && errors+=("Change S3_BUCKET from example to real value")
+    [ "$DB_PASSWORD" = "your_backup_user_password" ] && errors+=("Change DB_PASSWORD from example to real value")
+    
+    if [ ${#errors[@]} -gt 0 ]; then
+        echo "Configuration errors:"
+        printf '  %s\n' "${errors[@]}"
+        return 1
+    fi
+    
+    return 0
+}
+
+# Validate configuration on load
+if ! validate_config; then
+    echo "Please fix errors in config.sh file"
+    exit 1
+fi 
