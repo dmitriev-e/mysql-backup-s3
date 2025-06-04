@@ -52,14 +52,14 @@ show_help() {
 list_backups() {
     log_message "Getting list of available backups..."
     
-    echo "Available backups in s3://$S3_BUCKET/$S3_PREFIX/:"
+    echo "Available backups in s3://$S3_BUCKET/$SRV_FOLDER/$S3_PREFIX/$DB_NAME/:"
     echo "================================================="
     
-    s3cmd ls "s3://$S3_BUCKET/$S3_PREFIX/" | grep -E '\.(sql|sql\.gz|sql\.gz\.enc)$' | while read -r line; do
+    s3cmd ls "s3://$S3_BUCKET/$SRV_FOLDER/$S3_PREFIX/" | grep -E '\.(sql|sql\.gz|sql\.gz\.enc)$' | while read -r line; do
         # Parse s3cmd ls output (format: date time size file)
         date_part=$(echo "$line" | awk '{print $1, $2}')
         size_part=$(echo "$line" | awk '{print $3}')
-        file_part=$(echo "$line" | awk '{print $4}' | sed "s|s3://$S3_BUCKET/$S3_PREFIX/||")
+        file_part=$(echo "$line" | awk '{print $4}' | sed "s|s3://$S3_BUCKET/$SRV_FOLDER/$S3_PREFIX/$DB_NAME/||")
         
         # Format size
         if [ "$size_part" -gt 1073741824 ]; then
@@ -107,14 +107,14 @@ download_backup() {
     log_message "Downloading backup from S3: $backup_file"
     
     # Check if file exists in S3
-    s3cmd ls "s3://$S3_BUCKET/$S3_PREFIX/$backup_file" >/dev/null 2>&1
+    s3cmd ls "s3://$S3_BUCKET/$SRV_FOLDER/$S3_PREFIX/$DB_NAME/$backup_file" >/dev/null 2>&1
     if [ $? -ne 0 ]; then
-        log_message "ERROR: File not found in S3: s3://$S3_BUCKET/$S3_PREFIX/$backup_file"
+        log_message "ERROR: File not found in S3: s3://$S3_BUCKET/$SRV_FOLDER/$S3_PREFIX/$DB_NAME/$backup_file"
         return 1
     fi
     
     # Download file
-    s3cmd get "s3://$S3_BUCKET/$S3_PREFIX/$backup_file" "$local_file"
+    s3cmd get "s3://$S3_BUCKET/$SRV_FOLDER/$S3_PREFIX/$DB_NAME/$backup_file" "$local_file"
     
     if [ $? -eq 0 ]; then
         local file_size=$(du -h "$local_file" | cut -f1)

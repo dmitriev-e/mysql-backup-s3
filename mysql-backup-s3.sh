@@ -16,7 +16,7 @@ source "$CONFIG_FILE"
 
 # Build S3 path for backup
 # if folder does not exist, s3cmd will create it
-S3_BACKUP_PATH="s3://$S3_BUCKET/$SRV_FOLDER/mysql-backups/$DB_NAME"
+S3_BACKUP_PATH="s3://$S3_BUCKET/$SRV_FOLDER/$S3_PREFIX/$DB_NAME"
 
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="${DB_NAME}_backup_$DATE.sql.gz"
